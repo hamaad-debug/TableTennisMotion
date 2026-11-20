@@ -218,7 +218,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         drawBackground(c);
         boolean connected=System.currentTimeMillis()-lastPhonePacket<3000;
         // The far character is drawn behind the table; the near player is foregrounded below.
-        drawPlayer(c,g.oppX,1.02f,true,1,g.lastHitter==AI?Math.max(0,g.swingT/.25f):0);
+        drawPlayer(c,g.oppX,1.02f,true,1,g.lastHitter==GameLogic.AI?Math.max(0,g.swingT/.25f):0);
         drawTable(c);
 
         float ballScale=sc(g.bz), ballX=sx(g.bx,g.bz), shadowY=sy(g.bz);
@@ -241,3 +241,4 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         else text(c,"SWING YOUR PHONE  ·  FIRST TO 11 WINS BY 2",W*.5f,H*.975f,Math.max(dp(9),H*.013f),0xBFD8E7F0,Paint.Align.CENTER,true);
     }
 }
+
