@@ -54,6 +54,6 @@ The default World Tour is local two-player: the phone controls the near player a
 ## Troubleshooting
 - Phone can't find TV: both on the SAME Wi-Fi? Some routers have "AP/client isolation" (turn it off). Use the IP box.
 - Swings don't register: raise Sensitivity (slide right). "Motion" number on the phone should exceed the threshold when you swing.
-- Spin and tilt aiming need a gyroscope and accelerometer; basic swing and manual aim still work on devices with no gyroscope.
+- Swing and tilt aiming need an accelerometer. Wrist spin needs a gyroscope; without one, regular hits and aiming still work.
 - Laggy on TV: normal on Mi TV 4A over weak Wi-Fi; use 5GHz Wi-Fi/near router.
 

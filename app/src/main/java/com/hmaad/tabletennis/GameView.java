@@ -262,6 +262,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
     private void drawEventBadge(Canvas c) {
         text(c,STADIUMS[stadiumIndex],W-dp(26),H*.055f,Math.max(dp(11),H*.019f),0xFFE7F8FF,Paint.Align.RIGHT,true);
         text(c,g.twoPlayerMode?"UP: ARENA     DOWN: COUNTRY MATCH     MENU: vs AI":"UP: ARENA     DOWN: COUNTRY MATCH     MENU: 2 PLAYERS",W-dp(26),H*.082f,Math.max(dp(8),H*.012f),0xFFB7D4E2,Paint.Align.RIGHT,false);
+        if (g.twoPlayerMode) text(c,"PLAYER 2  ·  OK: HIT  ·  LEFT/RIGHT: AIM",W-dp(26),H*.108f,Math.max(dp(8),H*.012f),0xFFB7D4E2,Paint.Align.RIGHT,false);
     }
 
     @Override protected void onDraw(Canvas c) {

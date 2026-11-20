@@ -98,7 +98,7 @@ public class MainActivity extends Activity {
                 "OPEN RACKET MODE", 0xFF27C6E8, new Runnable() {
                     @Override public void run() { open(RacketActivity.class); }
                 });
-        View court = roleCard("02", "I'M THE TV", "Show the court, rally, score, and moving players on this screen.",
+        View court = roleCard("02", "I'M THE TV", "Show the court and country match. The TV remote can play as Player 2.",
                 "OPEN TV COURT", 0xFF9B83FF, new Runnable() {
                     @Override public void run() { open(TvActivity.class); }
                 });
@@ -219,3 +219,4 @@ public class MainActivity extends Activity {
         }
     }
 }
+
