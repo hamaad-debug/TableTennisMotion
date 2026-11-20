@@ -92,11 +92,12 @@ public class TvActivity extends Activity {
     public boolean onKeyDown(int k, KeyEvent e) {
         if (e.getRepeatCount() == 0 && k == KeyEvent.KEYCODE_DPAD_UP) { game.nextStadium(); return true; }
         if (e.getRepeatCount() == 0 && k == KeyEvent.KEYCODE_DPAD_DOWN) { game.nextMatchup(); return true; }
+        if (e.getRepeatCount() == 0 && k == KeyEvent.KEYCODE_MENU) { game.toggleOpponentMode(); return true; }
         if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_SPACE) {
-            game.queueHit(0.5f, 0f); return true;
+            game.g.queueOpponentHit(0.65f, 0f); return true;
         }
-        if (k == KeyEvent.KEYCODE_DPAD_LEFT) { game.queueHit(0.5f, -0.7f); return true; }
-        if (k == KeyEvent.KEYCODE_DPAD_RIGHT) { game.queueHit(0.5f, 0.7f); return true; }
+        if (k == KeyEvent.KEYCODE_DPAD_LEFT) { game.g.queueOpponentHit(0.65f, -0.75f); return true; }
+        if (k == KeyEvent.KEYCODE_DPAD_RIGHT) { game.g.queueOpponentHit(0.65f, 0.75f); return true; }
         return super.onKeyDown(k, e);
     }
 

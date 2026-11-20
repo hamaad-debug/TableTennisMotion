@@ -69,6 +69,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         g.resetMatch();
         invalidate();
     }
+    public void toggleOpponentMode() { g.setTwoPlayerMode(!g.twoPlayerMode); invalidate(); }
 
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -243,7 +244,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(dp(1)); p.setColor(0x7775D4E6); c.drawRoundRect(rect,height*.22f,height*.22f,p);
         float scoreY=top+height*.69f;
         text(c,MATCHUPS[matchupIndex][0],cx-width*.29f,top+height*.32f,height*.145f,0xFF71E7F3,Paint.Align.CENTER,true);
-        text(c,"WORLD TOUR",cx,top+height*.32f,height*.12f,0xFF98AEBE,Paint.Align.CENTER,true);
+        text(c,g.twoPlayerMode?"WORLD TOUR":"vs AI",cx,top+height*.32f,height*.12f,0xFF98AEBE,Paint.Align.CENTER,true);
         text(c,MATCHUPS[matchupIndex][1],cx+width*.29f,top+height*.32f,height*.145f,0xFFFF8790,Paint.Align.CENTER,true);
         text(c,String.valueOf(g.playerScore),cx-width*.29f,scoreY,height*.42f,Color.WHITE,Paint.Align.CENTER,true);
         text(c,":",cx,scoreY-height*.01f,height*.28f,0xFFB5C8D5,Paint.Align.CENTER,false);
@@ -260,7 +261,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
 
     private void drawEventBadge(Canvas c) {
         text(c,STADIUMS[stadiumIndex],W-dp(26),H*.055f,Math.max(dp(11),H*.019f),0xFFE7F8FF,Paint.Align.RIGHT,true);
-        text(c,"WORLD TOUR     UP: ARENA     DOWN: COUNTRY MATCH",W-dp(26),H*.082f,Math.max(dp(8),H*.012f),0xFFB7D4E2,Paint.Align.RIGHT,false);
+        text(c,g.twoPlayerMode?"UP: ARENA     DOWN: COUNTRY MATCH     MENU: vs AI":"UP: ARENA     DOWN: COUNTRY MATCH     MENU: 2 PLAYERS",W-dp(26),H*.082f,Math.max(dp(8),H*.012f),0xFFB7D4E2,Paint.Align.RIGHT,false);
     }
 
     @Override protected void onDraw(Canvas c) {
@@ -268,7 +269,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         drawBackground(c);
         boolean connected=System.currentTimeMillis()-lastPhonePacket<3000;
         // The far character is drawn behind the table; the near player is foregrounded below.
-        drawPlayer(c,g.oppX,1.02f,true,1,g.lastHitter==GameLogic.AI?Math.max(0,g.swingT/.25f):0);
+        drawPlayer(c,g.oppX,1.02f,true,(int)g.oppSwingDir,Math.max(0,g.oppSwingT/.25f));
         drawTable(c);
 
         float ballScale=sc(g.bz), ballX=sx(g.bx,g.bz), shadowY=sy(g.bz);

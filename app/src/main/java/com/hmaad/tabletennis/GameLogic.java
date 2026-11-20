@@ -21,7 +21,9 @@ public class GameLogic {
     public float bx, bz, by, bvx, bvz, bvy;
     public int lastHitter = PLAYER, bounces = 0;
     public boolean aiDecided = false;
+    public boolean twoPlayerMode = true;
     public float lastPower = 0.5f, stateTimer = 0f, swingT = 0f, swingDir = 1f, playerX = 0f, oppX = 0f;
+    public float oppSwingT = 0f, oppSwingDir = -1f;
     public float ballSideSpin = 0f, ballTopSpin = 0f, lastSideSpin = 0f, lastTopSpin = 0f;
     public String message = "";
 
@@ -33,7 +35,16 @@ public class GameLogic {
 
     public void queueHit(float power, float aim, float sideSpin, float topSpin) {
         hits.add(new float[]{clamp(power, 0f, 1f), clamp(aim, -1f, 1f),
-                clamp(sideSpin, -1f, 1f), clamp(topSpin, -1f, 1f)});
+                clamp(sideSpin, -1f, 1f), clamp(topSpin, -1f, 1f), 0f});
+    }
+
+    public void queueOpponentHit(float power, float aim) {
+        hits.add(new float[]{clamp(power, 0f, 1f), clamp(aim, -1f, 1f), 0f, 0f, 1f});
+    }
+
+    public void setTwoPlayerMode(boolean enabled) {
+        twoPlayerMode = enabled; resetMatch();
+        message = enabled ? "COUNTRY MATCH  ·  TV REMOTE CONTROLS PLAYER 2" : "SINGLES  ·  PHONE vs AI";
     }
 
     static float clamp(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
@@ -57,6 +68,7 @@ public class GameLogic {
         bvz = (targetZ - hz) / FLIGHT;
         bvx = (targetX - bx) / FLIGHT;
         lastHitter = AI; bounces = 0; aiDecided = false; state = RALLY; message = "";
+        oppSwingT = 0.25f; oppSwingDir = targetX >= bx ? 1f : -1f;
         if (sound != null) sound.hit();
     }
 
@@ -74,7 +86,24 @@ public class GameLogic {
         if (sound != null) sound.hit();
     }
 
-    private void handleHit(float power, float aim, float sideSpin, float topSpin) {
+    private void opponentHit(float power, float aim) {
+        if (state == GAME_OVER || state == POINT_PAUSE) return;
+        boolean serve = state == SERVE_AI;
+        boolean returnShot = state == RALLY && lastHitter == PLAYER && bounces >= 1
+                && bvz > 0f && bz > 0.52f && bz < 1.4f;
+        if (!serve && !returnShot) return;
+        float hz = serve ? 0.95f : Math.min(bz, 1.25f);
+        float targetZ = 0.05f + 0.33f * power;
+        float targetX = clamp(aim * 0.9f, -0.96f, 0.96f);
+        bx = clamp(bx, -1f, 1f); bz = hz; by = HIT_Y; bvy = VY0;
+        bvz = (targetZ - hz) / FLIGHT; bvx = (targetX - bx) / FLIGHT;
+        lastHitter = AI; bounces = 0; aiDecided = false; state = RALLY; message = "";
+        oppSwingT = 0.25f; oppSwingDir = aim >= 0f ? 1f : -1f;
+        if (sound != null) sound.hit();
+    }
+
+    private void handleHit(float power, float aim, float sideSpin, float topSpin, boolean opponent) {
+        if (opponent) { opponentHit(power, aim); return; }
         swingT = 0.25f; swingDir = aim >= 0f ? 1f : -1f;
         lastSideSpin = sideSpin; lastTopSpin = topSpin;
         if (state == GAME_OVER) {
@@ -104,8 +133,10 @@ public class GameLogic {
 
     public void update(float dt) {
         float[] h = hits.poll();
-        while (h != null) { handleHit(h[0], h[1], h.length > 2 ? h[2] : 0f, h.length > 3 ? h[3] : 0f); h = hits.poll(); }
+        while (h != null) { handleHit(h[0], h[1], h.length > 2 ? h[2] : 0f,
+                h.length > 3 ? h[3] : 0f, h.length > 4 && h[4] > 0.5f); h = hits.poll(); }
         if (swingT > 0f) swingT -= dt;
+        if (oppSwingT > 0f) oppSwingT -= dt;
 
         float tp = (state == RALLY && lastHitter == AI) ? clamp(bx, -1f, 1f) : 0f;
         playerX += (tp - playerX) * Math.min(1f, dt * 8f);
@@ -114,7 +145,10 @@ public class GameLogic {
 
         if (state == POINT_PAUSE) { stateTimer -= dt; if (stateTimer <= 0f) startServe(); return; }
         if (state == GAME_OVER) { stateTimer -= dt; return; }
-        if (state == SERVE_AI) { stateTimer -= dt; if (stateTimer <= 0f) aiHit(); return; }
+        if (state == SERVE_AI) {
+            if (twoPlayerMode) return;
+            stateTimer -= dt; if (stateTimer <= 0f) aiHit(); return;
+        }
         if (state != RALLY) return;
 
         int receiver = lastHitter == PLAYER ? AI : PLAYER;
@@ -146,7 +180,7 @@ public class GameLogic {
             awardPoint(bounces >= 1 ? lastHitter : receiver); return;
         }
 
-        if (lastHitter == PLAYER && bounces >= 1 && bvz > 0f && bz >= 0.88f && !aiDecided) {
+        if (!twoPlayerMode && lastHitter == PLAYER && bounces >= 1 && bvz > 0f && bz >= 0.88f && !aiDecided) {
             aiDecided = true;
             float skill = 0.97f - 0.3f * lastPower;
             if (rnd.nextFloat() < skill) aiHit();

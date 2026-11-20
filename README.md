@@ -49,8 +49,7 @@ TV (Mi TV 4A): copy TT-TV-Game.apk to a pen drive -> plug into the TV -> open it
    - Use "Reverse left / right aiming" if the court feels mirrored.
    - You can only hit AFTER the ball has bounced on your side of the table.
 5. First to 11 (win by 2) wins. Swing to play again.
-On the TV remote: UP = next stadium, DOWN = next country matchup, OK = hit, LEFT/RIGHT = aimed hit.
-The World Tour currently plays a local rally against the TV's AI opponent; the country matchup and arena can be changed between rounds.
+The default World Tour is local two-player: the phone controls the near player and the TV remote controls the far player (OK = hit, LEFT/RIGHT = aim). UP changes stadium; DOWN starts the next country matchup. Press MENU to switch between two-player mode and phone-vs-AI mode.
 
 ## Troubleshooting
 - Phone can't find TV: both on the SAME Wi-Fi? Some routers have "AP/client isolation" (turn it off). Use the IP box.
