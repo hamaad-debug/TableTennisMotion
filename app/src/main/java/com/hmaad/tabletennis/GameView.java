@@ -62,6 +62,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
     }
 
     public void queueHit(float power, float aim) { g.queueHit(power, aim); }
+    public void queueHit(float power, float aim, float sideSpin, float topSpin) { g.queueHit(power, aim, sideSpin, topSpin); }
     public void nextStadium() { stadiumIndex = (stadiumIndex + 1) % STADIUMS.length; invalidate(); }
     public void nextMatchup() {
         matchupIndex = (matchupIndex + 1) % MATCHUPS.length;
