@@ -115,7 +115,7 @@ tasks.register('generateRallyArtwork') {
                 art.fillRect(0, 600, w, h - 600)
                 art.setColor(new Color(39, 126, 157, 42)); art.setStroke(new BasicStroke(2f))
                 for (int y = 650; y < h; y += 70) art.drawLine(0, y, w, y - 10)
-                for (int x : [130, 450, 960, 1470, 1790]) art.drawLine(x, 620, x + (x - 960) / 4, h)
+                for (int x : [130, 450, 960, 1470, 1790]) art.drawLine(x, 620, (int) (x + (x - 960) / 4), h)
                 art.setColor(new Color(44, 211, 241, 82)); art.setStroke(new BasicStroke(5f)); art.drawLine(0, 604, w, 577)
             }
             art.dispose()
