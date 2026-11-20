@@ -77,9 +77,9 @@ tasks.register('generateRallyArtwork') {
                 art.setColor(new Color(62, 206, 235, 32)); art.setStroke(new BasicStroke(3f))
                 art.drawLine(82, 170, 82, 1510); art.drawLine(w - 82, 170, w - 82, 1510)
                 art.setColor(new Color(5, 17, 31, 150))
-                int[] xs = [0, w / 2, w, w, 0] as int[]; int[] ys = [1510, 1370, 1510, h, h] as int[]; art.fillPolygon(xs, ys, xs.length)
+                int[] xs = [0, w.intdiv(2), w, w, 0] as int[]; int[] ys = [1510, 1370, 1510, h, h] as int[]; art.fillPolygon(xs, ys, xs.length)
                 art.setColor(new Color(42, 197, 224, 105)); art.setStroke(new BasicStroke(4f))
-                art.drawLine(0, 1510, w / 2, 1370); art.drawLine(w / 2, 1370, w, 1510)
+                art.drawLine(0, 1510, w.intdiv(2), 1370); art.drawLine(w.intdiv(2), 1370, w, 1510)
                 for (int y = 1590; y < h; y += 100) art.drawLine(80, y, w - 80, y - 8)
             } else {
                 art.setColor(new Color(3, 9, 17, 170)); art.fillRect(0, 0, w, 170)
