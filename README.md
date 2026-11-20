@@ -1,8 +1,10 @@
-# Table Tennis Motion (phone = racket, TV = game)
+# Rally — Table Tennis Motion
 
-ONE app does both jobs. Install the SAME app on your phone and on your Mi TV,
-then pick "RACKET" on the phone. (On the TV it opens in game mode by itself.)
-Both devices must be on the same Wi-Fi. No internet/cloud needed to play.
+One Android app runs on both your phone and Android TV. On launch, choose
+**I'M THE RACKET** on the phone or **I'M THE TV** on the TV. The phone reads
+your swing and aim; the TV shows the court, rally, score, and animated players.
+Both devices must be on the same Wi-Fi. Gameplay uses your local network and
+does not require a cloud service or subscription.
 
 ## Part 1: Put the project on GitHub (once)
 1. Go to https://github.com and sign in (or Sign up - free).
@@ -36,8 +38,8 @@ TV (Mi TV 4A): copy TT-TV-Game.apk to a pen drive -> plug into the TV -> open it
    The app appears in the TV's apps list as "TT Motion".
 
 ## Part 5: Play
-1. Open the app on the TV. It shows "TV IP: ..." at the top-left.
-2. Open the app on the phone -> tap "I'm the RACKET". It should say "TV found" in a few seconds.
+1. Open the app on the TV and choose **I'M THE TV**. It shows the TV IP and waits for the phone.
+2. Open the app on the phone and choose **I'M THE RACKET**. It should say "TV ready" in a few seconds.
    If not: type the TV IP into the box and tap "Connect to this IP".
 3. TV top-left turns green: "Phone: connected".
 4. Hold the phone upright (portrait), screen facing you. Swing it like a racket to serve and return.
