@@ -129,7 +129,7 @@ tasks.register('generateRallyArtwork') {
         Random grain = new Random(34L)
         for (int y = 0; y < 1024; y++) for (int x = 0; x < 1024; x++) {
             int n = grain.nextInt(33) - 16
-            int r = Math.max(0, 10 + n / 4), g = Math.max(0, Math.min(255, 74 + y / 45 + n)), b = Math.max(0, Math.min(255, 109 + y / 30 + n))
+            int r = Math.max(0, 10 + n.intdiv(4)), g = Math.max(0, Math.min(255, 74 + y.intdiv(45) + n)), b = Math.max(0, Math.min(255, 109 + y.intdiv(30) + n))
             pixels[y * 1024 + x] = 0xFF000000 | (r << 16) | (g << 8) | b
         }
         ImageIO.write(surface, 'png', new File(out, 'court_surface.png'))
