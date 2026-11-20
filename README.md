@@ -57,3 +57,7 @@ The default World Tour is local two-player: the phone controls the near player a
 - Swing and tilt aiming need an accelerometer. Wrist spin needs a gyroscope; without one, regular hits and aiming still work.
 - Laggy on TV: normal on Mi TV 4A over weak Wi-Fi; use 5GHz Wi-Fi/near router.
 
+## Experimental 3D court
+
+The new `godot3d/` project is the first 3D renderer prototype for the TV side. It keeps this Android app intact and can receive the existing phone controller's Wi-Fi swing packets. See [godot3d/README.md](godot3d/README.md) to open the prototype in Godot 4.7.2 or newer.
+
