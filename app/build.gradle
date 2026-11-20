@@ -77,7 +77,7 @@ tasks.register('generateRallyArtwork') {
                 art.setColor(new Color(62, 206, 235, 32)); art.setStroke(new BasicStroke(3f))
                 art.drawLine(82, 170, 82, 1510); art.drawLine(w - 82, 170, w - 82, 1510)
                 art.setColor(new Color(5, 17, 31, 150))
-                int[] xs = {0, w / 2, w, w, 0}; int[] ys = {1510, 1370, 1510, h, h}; art.fillPolygon(xs, ys, xs.length)
+                int[] xs = [0, w / 2, w, w, 0] as int[]; int[] ys = [1510, 1370, 1510, h, h] as int[]; art.fillPolygon(xs, ys, xs.length)
                 art.setColor(new Color(42, 197, 224, 105)); art.setStroke(new BasicStroke(4f))
                 art.drawLine(0, 1510, w / 2, 1370); art.drawLine(w / 2, 1370, w, 1510)
                 for (int y = 1590; y < h; y += 100) art.drawLine(80, y, w - 80, y - 8)
@@ -90,7 +90,7 @@ tasks.register('generateRallyArtwork') {
                     art.setColor(new Color(82, 217, 245, 58)); art.fillOval(x - 94, 122, 188, 34)
                 }
                 art.setColor(new Color(8, 23, 40, 255));
-                int[] xs = {0, w, w, 0}; int[] ys = {258, 228, 610, 642}; art.fillPolygon(xs, ys, xs.length)
+                int[] xs = [0, w, w, 0] as int[]; int[] ys = [258, 228, 610, 642] as int[]; art.fillPolygon(xs, ys, xs.length)
                 Random seats = new Random(5L)
                 for (int row = 0; row < 12; row++) {
                     int y = 280 + row * 26, offset = (row % 2) * 11
@@ -149,3 +149,4 @@ tasks.register('generateRallyArtwork') {
 }
 
 tasks.named('preBuild').configure { dependsOn tasks.named('generateRallyArtwork') }
+
