@@ -32,11 +32,19 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
     private final Bitmap tableSurface;
     private final BitmapShader tableShader;
     private final Matrix textureMatrix = new Matrix();
+    private final float[] trailX = new float[18], trailY = new float[18], trailZ = new float[18];
     private boolean running = false;
     private long lastNanos = 0;
     private ToneGenerator tone;
     private float W, H, cx, horizon, nearY, nearHalf, hs;
     private int frame = 0;
+    private int trailWrite = 0;
+    private int stadiumIndex = 0, matchupIndex = 0;
+    private static final String[] STADIUMS = {"TOKYO  ·  SKYDOME", "PARIS  ·  GRAND ARENA", "RIO  ·  SAMBA HALL", "LONDON  ·  CHAMPIONS COURT"};
+    private static final String[][] MATCHUPS = {
+            {"INDIA", "JAPAN"}, {"BRAZIL", "FRANCE"}, {"CHINA", "USA"}, {"SOUTH KOREA", "GERMANY"},
+            {"SWEDEN", "AUSTRALIA"}, {"EGYPT", "SPAIN"}, {"CANADA", "ITALY"}, {"MEXICO", "SINGAPORE"}
+    };
 
     public GameView(Context c) {
         super(c);
@@ -54,6 +62,12 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
     }
 
     public void queueHit(float power, float aim) { g.queueHit(power, aim); }
+    public void nextStadium() { stadiumIndex = (stadiumIndex + 1) % STADIUMS.length; invalidate(); }
+    public void nextMatchup() {
+        matchupIndex = (matchupIndex + 1) % MATCHUPS.length;
+        g.resetMatch();
+        invalidate();
+    }
 
     @Override protected void onAttachedToWindow() {
         super.onAttachedToWindow();
@@ -71,7 +85,12 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         if (!running) return;
         float dt = lastNanos == 0 ? 0.016f : (nanos-lastNanos)/1000000000f;
         lastNanos=nanos; if (dt>0.05f) dt=0.05f;
-        g.update(dt); frame++; invalidate(); Choreographer.getInstance().postFrameCallback(this);
+        g.update(dt); frame++;
+        if (g.state == GameLogic.RALLY && frame % 2 == 0) {
+            trailX[trailWrite] = g.bx; trailY[trailWrite] = g.by; trailZ[trailWrite] = g.bz;
+            trailWrite = (trailWrite + 1) % trailX.length;
+        }
+        invalidate(); Choreographer.getInstance().postFrameCallback(this);
     }
 
     private void beep(int type, int duration) {
@@ -97,6 +116,14 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
             rect.set(0,0,W,H); p.setStyle(Paint.Style.FILL); p.setShader(null); p.setColor(Color.WHITE);
             c.drawBitmap(arena,null,rect,p);
         } else c.drawColor(0xFF071522);
+        int[] arenaWash = {0x122250FF, 0x1BDF365D, 0x1BCC8E3D, 0x1532B889};
+        p.setColor(arenaWash[stadiumIndex]); p.setStyle(Paint.Style.FILL); p.setShader(null); c.drawRect(0,0,W,H,p);
+        if (stadiumIndex != 0) {
+            p.setShader(new LinearGradient(W*.18f,0,W*.48f,H*.72f,0x3345DDF5,0x0045DDF5,Shader.TileMode.CLAMP));
+            path.reset(); path.moveTo(W*.12f,0); path.lineTo(W*.31f,0); path.lineTo(W*.55f,H*.76f); path.close(); c.drawPath(path,p);
+            p.setShader(new LinearGradient(W*.82f,0,W*.58f,H*.72f,0x33FFCF7A,0x00FFCF7A,Shader.TileMode.CLAMP));
+            path.reset(); path.moveTo(W*.76f,0); path.lineTo(W*.95f,0); path.lineTo(W*.62f,H*.76f); path.close(); c.drawPath(path,p);
+        }
         p.setShader(new LinearGradient(0,0,0,H,0x70040C16,0x36051019,Shader.TileMode.CLAMP));
         c.drawRect(0,0,W,H,p); p.setShader(null);
     }
@@ -183,6 +210,23 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         }
     }
 
+    private void drawBallTrail(Canvas c) {
+        if (g.state != GameLogic.RALLY || Math.abs(g.lastSideSpin) + Math.abs(g.lastTopSpin) < 0.12f) return;
+        int tint = g.lastSideSpin > 0.12f ? 0xFF48E0F5 : (g.lastSideSpin < -0.12f ? 0xFFFF6480 : 0xFFFFC45B);
+        float spin = Math.min(1f, Math.abs(g.lastSideSpin) + Math.abs(g.lastTopSpin));
+        for (int i = 0; i < trailX.length; i++) {
+            int index = (trailWrite + i) % trailX.length;
+            float scale = sc(trailZ[index]);
+            float x = sx(trailX[index], trailZ[index]);
+            float y = sy(trailZ[index]) - Math.max(0f, trailY[index]) * hs * scale;
+            float r = Math.max(dp(1.5f), H * .010f * scale) * (0.35f + 0.65f * i / trailX.length);
+            p.setStyle(Paint.Style.FILL); p.setShader(null);
+            int alpha = (int)(Math.min(125f, 18f + 100f * i / trailX.length) * spin);
+            p.setColor((alpha << 24) | (tint & 0x00FFFFFF));
+            c.drawCircle(x, y, r, p);
+        }
+    }
+
     private void drawBall(Canvas c,float x,float y,float radius) {
         fill(c,0x66000000); rect.set(x-radius*.8f,y+radius*.35f,x+radius*.8f,y+radius*.72f); c.drawOval(rect,p);
         fill(c,0xFFFFB52E); c.drawCircle(x,y,radius,p);
@@ -197,9 +241,9 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         p.setStyle(Paint.Style.FILL); p.setShader(new LinearGradient(0,top,0,top+height,0xED071725,0xD20A2030,Shader.TileMode.CLAMP)); c.drawRoundRect(rect,height*.22f,height*.22f,p); p.setShader(null);
         p.setStyle(Paint.Style.STROKE); p.setStrokeWidth(dp(1)); p.setColor(0x7775D4E6); c.drawRoundRect(rect,height*.22f,height*.22f,p);
         float scoreY=top+height*.69f;
-        text(c,"YOU",cx-width*.29f,top+height*.32f,height*.17f,0xFF71E7F3,Paint.Align.CENTER,true);
-        text(c,"TV RALLY",cx,top+height*.32f,height*.14f,0xFF98AEBE,Paint.Align.CENTER,true);
-        text(c,"CPU",cx+width*.29f,top+height*.32f,height*.17f,0xFFFF8790,Paint.Align.CENTER,true);
+        text(c,MATCHUPS[matchupIndex][0],cx-width*.29f,top+height*.32f,height*.145f,0xFF71E7F3,Paint.Align.CENTER,true);
+        text(c,"WORLD TOUR",cx,top+height*.32f,height*.12f,0xFF98AEBE,Paint.Align.CENTER,true);
+        text(c,MATCHUPS[matchupIndex][1],cx+width*.29f,top+height*.32f,height*.145f,0xFFFF8790,Paint.Align.CENTER,true);
         text(c,String.valueOf(g.playerScore),cx-width*.29f,scoreY,height*.42f,Color.WHITE,Paint.Align.CENTER,true);
         text(c,":",cx,scoreY-height*.01f,height*.28f,0xFFB5C8D5,Paint.Align.CENTER,false);
         text(c,String.valueOf(g.aiScore),cx+width*.29f,scoreY,height*.42f,Color.WHITE,Paint.Align.CENTER,true);
@@ -213,6 +257,11 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         text(c,"TV IP  " + tvIp,left,top+H*.036f,Math.max(dp(9),H*.012f),0xFFD6E3EB,Paint.Align.LEFT,false);
     }
 
+    private void drawEventBadge(Canvas c) {
+        text(c,STADIUMS[stadiumIndex],W-dp(26),H*.055f,Math.max(dp(11),H*.019f),0xFFE7F8FF,Paint.Align.RIGHT,true);
+        text(c,"WORLD TOUR     UP: ARENA     DOWN: COUNTRY MATCH",W-dp(26),H*.082f,Math.max(dp(8),H*.012f),0xFFB7D4E2,Paint.Align.RIGHT,false);
+    }
+
     @Override protected void onDraw(Canvas c) {
         W=getWidth(); H=getHeight(); cx=W*.5f; horizon=H*.12f; nearY=H*.88f; nearHalf=W*.36f; hs=H*.78f;
         drawBackground(c);
@@ -223,6 +272,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
 
         float ballScale=sc(g.bz), ballX=sx(g.bx,g.bz), shadowY=sy(g.bz);
         float ballRadius=Math.max(dp(4),H*.018f*ballScale);
+        drawBallTrail(c);
         if(g.bz>.5f) drawBall(c,ballX,shadowY-Math.max(0,g.by)*hs*ballScale,ballRadius);
         drawNet(c);
         if(g.bz<=.5f) drawBall(c,ballX,shadowY-Math.max(0,g.by)*hs*ballScale,ballRadius);
@@ -231,6 +281,7 @@ public class GameView extends View implements Choreographer.FrameCallback, GameL
         drawPlayer(c,g.playerX+g.swingDir*.20f*animation,-.10f,false,(int)g.swingDir,animation);
         drawScoreboard(c);
         drawConnection(c,connected);
+        drawEventBadge(c);
 
         if(!g.message.isEmpty()) {
             float y=H*.255f, pad=dp(24);

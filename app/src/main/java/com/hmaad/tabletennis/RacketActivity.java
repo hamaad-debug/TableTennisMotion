@@ -48,7 +48,7 @@ import java.util.concurrent.Executors;
 /** Motion-controller screen shown when this device is selected as the racket. */
 public class RacketActivity extends Activity implements SensorEventListener {
     private SensorManager sm;
-    private Sensor acc;
+    private Sensor acc, gyro;
     private Vibrator vib;
     private final float[] grav = new float[3];
     private boolean gravInit = false;
@@ -65,6 +65,8 @@ public class RacketActivity extends Activity implements SensorEventListener {
     private int phase = 0;
     private long phaseStart = 0, cooldownUntil = 0, lastUi = 0;
     private float peak, peakX;
+    private float spinSideRadians, spinTopRadians;
+    private long gyroTimestamp;
     private WifiManager.MulticastLock mlock;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable pinger = new Runnable() {
@@ -102,6 +104,7 @@ public class RacketActivity extends Activity implements SensorEventListener {
         getWindow().setNavigationBarColor(Color.rgb(5, 13, 24));
         sm = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         acc = sm != null ? sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) : null;
+        gyro = sm != null ? sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE) : null;
         vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         final SharedPreferences sp = getSharedPreferences("tt", MODE_PRIVATE);
         threshold = sp.getFloat("threshold", 12f);
@@ -219,7 +222,7 @@ public class RacketActivity extends Activity implements SensorEventListener {
         LinearLayout.LayoutParams testLp = new LinearLayout.LayoutParams(-1, dp(58)); testLp.topMargin = dp(13);
         root.addView(test, testLp);
         test.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { sendHit(0.55f, 0f); } });
-        TextView foot = label("Hold your phone upright. Swing like a racket; swing sideways to aim. The TV player moves with each hit.",
+        TextView foot = label("Hold your phone upright. Tilt left or right to aim, swing for power, and twist your wrist through the shot to add spin.",
                 12, 0xFFADC1CE, false);
         foot.setGravity(Gravity.CENTER); foot.setLineSpacing(dp(3), 1.05f);
         LinearLayout.LayoutParams footLp = new LinearLayout.LayoutParams(-1, -2); footLp.topMargin = dp(12);
@@ -248,6 +251,7 @@ public class RacketActivity extends Activity implements SensorEventListener {
     @Override protected void onResume() {
         super.onResume();
         if (acc != null) sm.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
+        if (gyro != null) sm.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
         try {
             WifiManager wm = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (wm != null) { mlock = wm.createMulticastLock("rally-discovery"); mlock.setReferenceCounted(false); mlock.acquire(); }
@@ -313,7 +317,11 @@ public class RacketActivity extends Activity implements SensorEventListener {
     }
 
     private void sendHit(float power, float aim) {
-        send(String.format(Locale.US, "H,%.2f,%.2f", power, aim));
+        sendHit(power, aim, 0f, 0f);
+    }
+
+    private void sendHit(float power, float aim, float sideSpin, float topSpin) {
+        send(String.format(Locale.US, "H,%.2f,%.2f,%.2f,%.2f", power, aim, sideSpin, topSpin));
         if (gauge != null) gauge.swing(aim, power);
         try { if (vib != null) {
             if (Build.VERSION.SDK_INT >= 26) vib.vibrate(VibrationEffect.createOneShot(45, VibrationEffect.DEFAULT_AMPLITUDE));
@@ -324,6 +332,17 @@ public class RacketActivity extends Activity implements SensorEventListener {
     private static float clamp(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
     @Override public void onSensorChanged(SensorEvent e) {
+        if (e.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            long now = SystemClock.uptimeMillis();
+            if (phase != 0 && gyroTimestamp != 0) {
+                float dt = Math.min(0.04f, Math.max(0f, (now - gyroTimestamp) / 1000f));
+                spinSideRadians += e.values[2] * dt;
+                spinTopRadians += e.values[1] * dt;
+            }
+            gyroTimestamp = now;
+            return;
+        }
+        if (e.sensor.getType() != Sensor.TYPE_ACCELEROMETER) return;
         float x=e.values[0], y=e.values[1], z=e.values[2];
         if (!gravInit) { grav[0]=x; grav[1]=y; grav[2]=z; gravInit=true; return; }
         final float alpha=0.98f;
@@ -335,12 +354,21 @@ public class RacketActivity extends Activity implements SensorEventListener {
             lastUi=now; live.setText(String.format(Locale.US,"Motion  %.1f m/s²     ·     Swing above %.0f",mag,threshold));
         }
         if (phase==0) {
-            if (mag>threshold && now>cooldownUntil) { phase=1; phaseStart=now; peak=mag; peakX=lx; }
+            if (mag>threshold && now>cooldownUntil) {
+                phase=1; phaseStart=now; peak=mag; peakX=lx;
+                spinSideRadians=0f; spinTopRadians=0f; gyroTimestamp=now;
+            }
         } else {
             if (mag>peak) peak=mag; if (Math.abs(lx)>Math.abs(peakX)) peakX=lx;
-            if (now-phaseStart>=60) {
-                float power=clamp((peak-threshold)/18f,0f,1f), aim=clamp(peakX/20f,-1f,1f);
-                if (flipAim) aim=-aim; sendHit(power,aim); phase=0; cooldownUntil=now+450;
+            if (now-phaseStart>=120) {
+                float power=clamp((peak-threshold)/18f,0f,1f);
+                float tiltAim=clamp(-grav[0]/7f,-0.65f,0.65f);
+                float swingAim=clamp(peakX/30f,-0.35f,0.35f);
+                float aim=clamp(tiltAim+swingAim,-1f,1f);
+                float sideSpin=clamp(spinSideRadians/1.4f,-1f,1f);
+                float topSpin=clamp(spinTopRadians/1.4f,-1f,1f);
+                if (flipAim) aim=-aim;
+                sendHit(power,aim,sideSpin,topSpin); phase=0; cooldownUntil=now+450;
             }
         }
     }
@@ -384,3 +412,4 @@ public class RacketActivity extends Activity implements SensorEventListener {
         private float dpLocal(float n){return n*getResources().getDisplayMetrics().density;}
     }
 }
+

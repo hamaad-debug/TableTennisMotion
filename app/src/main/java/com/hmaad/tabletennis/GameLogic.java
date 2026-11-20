@@ -22,12 +22,18 @@ public class GameLogic {
     public int lastHitter = PLAYER, bounces = 0;
     public boolean aiDecided = false;
     public float lastPower = 0.5f, stateTimer = 0f, swingT = 0f, swingDir = 1f, playerX = 0f, oppX = 0f;
+    public float ballSideSpin = 0f, ballTopSpin = 0f, lastSideSpin = 0f, lastTopSpin = 0f;
     public String message = "";
 
     public GameLogic() { startServe(); }
 
-    public void queueHit(float power, float aim) {
-        hits.add(new float[]{clamp(power, 0f, 1f), clamp(aim, -1f, 1f)});
+    public void resetMatch() { playerScore = 0; aiScore = 0; startServe(); }
+
+    public void queueHit(float power, float aim) { queueHit(power, aim, 0f, 0f); }
+
+    public void queueHit(float power, float aim, float sideSpin, float topSpin) {
+        hits.add(new float[]{clamp(power, 0f, 1f), clamp(aim, -1f, 1f),
+                clamp(sideSpin, -1f, 1f), clamp(topSpin, -1f, 1f)});
     }
 
     static float clamp(float v, float lo, float hi) { return v < lo ? lo : (v > hi ? hi : v); }
@@ -54,27 +60,30 @@ public class GameLogic {
         if (sound != null) sound.hit();
     }
 
-    private void playerHit(float power, float aim) {
+    private void playerHit(float power, float aim, float sideSpin, float topSpin) {
         if (bz < -0.3f) bz = -0.3f;
         float targetZ = 0.62f + 0.33f * power;
-        float targetX = clamp(aim * 0.8f + (rnd.nextFloat() - 0.5f) * 0.1f, -0.9f, 0.9f);
+        float targetX = clamp(aim * 0.9f + sideSpin * 0.12f + (rnd.nextFloat() - 0.5f) * 0.06f, -0.96f, 0.96f);
         by = HIT_Y; bvy = VY0;
         bvz = (targetZ - bz) / FLIGHT;
         bvx = (targetX - bx) / FLIGHT;
         lastHitter = PLAYER; bounces = 0; aiDecided = false; state = RALLY; message = "";
         lastPower = power;
+        ballSideSpin = sideSpin * 1.25f; ballTopSpin = topSpin;
+        lastSideSpin = sideSpin; lastTopSpin = topSpin;
         if (sound != null) sound.hit();
     }
 
-    private void handleHit(float power, float aim) {
+    private void handleHit(float power, float aim, float sideSpin, float topSpin) {
         swingT = 0.25f; swingDir = aim >= 0f ? 1f : -1f;
+        lastSideSpin = sideSpin; lastTopSpin = topSpin;
         if (state == GAME_OVER) {
             if (stateTimer <= 0f) { playerScore = 0; aiScore = 0; startServe(); }
             return;
         }
-        if (state == SERVE_PLAYER) { playerHit(power, aim); return; }
+        if (state == SERVE_PLAYER) { playerHit(power, aim, sideSpin, topSpin); return; }
         if (state == RALLY && lastHitter == AI && bounces >= 1 && bvz < 0f && bz < 0.45f && bz > -0.3f) {
-            playerHit(power, aim);
+            playerHit(power, aim, sideSpin, topSpin);
         }
     }
 
@@ -95,7 +104,7 @@ public class GameLogic {
 
     public void update(float dt) {
         float[] h = hits.poll();
-        while (h != null) { handleHit(h[0], h[1]); h = hits.poll(); }
+        while (h != null) { handleHit(h[0], h[1], h.length > 2 ? h[2] : 0f, h.length > 3 ? h[3] : 0f); h = hits.poll(); }
         if (swingT > 0f) swingT -= dt;
 
         float tp = (state == RALLY && lastHitter == AI) ? clamp(bx, -1f, 1f) : 0f;
@@ -110,7 +119,13 @@ public class GameLogic {
 
         int receiver = lastHitter == PLAYER ? AI : PLAYER;
         float pz = bz;
-        bx += bvx * dt; bz += bvz * dt; by += bvy * dt; bvy -= G * dt;
+        if (lastHitter == PLAYER && bvz > 0f) {
+            bvx += ballSideSpin * 0.30f * dt;
+            ballSideSpin *= Math.max(0f, 1f - dt * 0.16f);
+        }
+        bx += bvx * dt; bz += bvz * dt; by += bvy * dt;
+        float effectiveGravity = G * (lastHitter == PLAYER && bvz > 0f ? 1f + ballTopSpin * 0.24f : 1f);
+        bvy -= effectiveGravity * dt;
 
         if ((pz < 0.5f) != (bz < 0.5f) && by < NET_H) { awardPoint(receiver); return; }
 
@@ -121,7 +136,8 @@ public class GameLogic {
                 if (side != receiver) { awardPoint(receiver); return; }
                 bounces++;
                 if (bounces >= 2) { awardPoint(lastHitter); return; }
-                by = 0f; bvy = -bvy * BOUNCE;
+                by = 0f; bvy = -bvy * BOUNCE * (1f - (lastHitter == PLAYER ? ballTopSpin * 0.10f : 0f));
+                bvx += lastHitter == PLAYER ? ballSideSpin * 0.10f : 0f;
             } else {
                 awardPoint(bounces >= 1 ? lastHitter : receiver); return;
             }
@@ -137,3 +153,4 @@ public class GameLogic {
         }
     }
 }
+

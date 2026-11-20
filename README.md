@@ -42,14 +42,19 @@ TV (Mi TV 4A): copy TT-TV-Game.apk to a pen drive -> plug into the TV -> open it
 2. Open the app on the phone and choose **I'M THE RACKET**. It should say "TV ready" in a few seconds.
    If not: type the TV IP into the box and tap "Connect to this IP".
 3. TV top-left turns green: "Phone: connected".
-4. Hold the phone upright (portrait), screen facing you. Swing it like a racket to serve and return.
-   - Swing sideways to aim left/right (use "Flip left/right aim" if it feels reversed).
-   - Harder swing = deeper shot. Too weak/too soft? Move the Sensitivity slider.
+4. Hold the phone upright (portrait), screen facing you. Use natural racket movements:
+   - Tilt the phone left/right to aim; the fast part of your swing fine-tunes direction.
+   - Swing faster for more power. Adjust the sensitivity slider if hits trigger too easily or not easily enough.
+   - Twist your wrist through contact to add sidespin or topspin. The TV shows a colored ball trail and applies curve and bounce changes.
+   - Use "Reverse left / right aiming" if the court feels mirrored.
    - You can only hit AFTER the ball has bounced on your side of the table.
 5. First to 11 (win by 2) wins. Swing to play again.
-No phone nearby? On the TV remote: OK = hit, LEFT/RIGHT = aimed hit.
+On the TV remote: UP = next stadium, DOWN = next country matchup, OK = hit, LEFT/RIGHT = aimed hit.
+The World Tour currently plays a local rally against the TV's AI opponent; the country matchup and arena can be changed between rounds.
 
 ## Troubleshooting
 - Phone can't find TV: both on the SAME Wi-Fi? Some routers have "AP/client isolation" (turn it off). Use the IP box.
 - Swings don't register: raise Sensitivity (slide right). "Motion" number on the phone should exceed the threshold when you swing.
+- Spin and tilt aiming need a gyroscope and accelerometer; basic swing and manual aim still work on devices with no gyroscope.
 - Laggy on TV: normal on Mi TV 4A over weak Wi-Fi; use 5GHz Wi-Fi/near router.
+

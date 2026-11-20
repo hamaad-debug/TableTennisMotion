@@ -47,7 +47,11 @@ public class TvActivity extends Activity {
                         if (m.startsWith("H,")) {
                             String[] a = m.split(",");
                             if (a.length >= 3) {
-                                try { game.queueHit(Float.parseFloat(a[1]), Float.parseFloat(a[2])); }
+                                try {
+                                    float side = a.length > 3 ? Float.parseFloat(a[3]) : 0f;
+                                    float top = a.length > 4 ? Float.parseFloat(a[4]) : 0f;
+                                    game.queueHit(Float.parseFloat(a[1]), Float.parseFloat(a[2]), side, top);
+                                }
                                 catch (NumberFormatException ignored) { }
                             }
                         }
@@ -86,6 +90,8 @@ public class TvActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int k, KeyEvent e) {
+        if (e.getRepeatCount() == 0 && k == KeyEvent.KEYCODE_DPAD_UP) { game.nextStadium(); return true; }
+        if (e.getRepeatCount() == 0 && k == KeyEvent.KEYCODE_DPAD_DOWN) { game.nextMatchup(); return true; }
         if (k == KeyEvent.KEYCODE_DPAD_CENTER || k == KeyEvent.KEYCODE_ENTER || k == KeyEvent.KEYCODE_SPACE) {
             game.queueHit(0.5f, 0f); return true;
         }
@@ -103,3 +109,4 @@ public class TvActivity extends Activity {
         super.onDestroy();
     }
 }
+

@@ -8,6 +8,7 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
 
     <application
         android:label="Rally · Table Tennis Motion"
@@ -39,3 +40,4 @@
             android:configChanges="orientation|screenSize|keyboardHidden" />
     </application>
 </manifest>
+
